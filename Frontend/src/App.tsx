@@ -1,0 +1,79 @@
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import Toast, { BaseToast } from "react-native-toast-message";
+import { toastConfig } from "@/components/ui/ToastProvider";
+import { NavigationContainer, DefaultTheme } from "@react-navigation/native";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { SafeAreaProvider } from "react-native-safe-area-context";
+import { View } from "react-native";
+import AppLayout from "./components/layout/AppLayout";
+import Index from "./pages/Index";
+import Workouts from "./pages/Workouts";
+import Nutrition from "./pages/Nutrition";
+import Profile from "./pages/Profile";
+import NotFound from "./pages/NotFound";
+
+const queryClient = new QueryClient();
+const Stack = createNativeStackNavigator();
+
+// Make the background transparent to allow for clean fade transitions
+const MyTheme = {
+  ...DefaultTheme,
+  colors: {
+    ...DefaultTheme.colors,
+    background: "transparent",
+  },
+};
+
+// Wrap each screen with AppLayout
+const HomeScreen = () => (
+  <AppLayout>
+    <Index />
+  </AppLayout>
+);
+
+const WorkoutsScreen = () => (
+  <AppLayout>
+    <Workouts />
+  </AppLayout>
+);
+
+const NutritionScreen = () => (
+  <AppLayout>
+    <Nutrition />
+  </AppLayout>
+);
+
+const ProfileScreen = () => (
+  <AppLayout>
+    <Profile />
+  </AppLayout>
+);
+
+const App = () => (
+  <SafeAreaProvider>
+    <QueryClientProvider client={queryClient}>
+      <NavigationContainer theme={MyTheme}>
+        <Stack.Navigator
+          id={undefined}
+          initialRouteName="Home"
+          screenOptions={{
+            headerShown: false,
+            contentStyle: { backgroundColor: "transparent" },
+            animation: "none",
+            animationDuration: 0,
+            presentation: "transparentModal",
+          }}
+        >
+          <Stack.Screen name="Home" component={HomeScreen} />
+          <Stack.Screen name="Workouts" component={WorkoutsScreen} />
+          <Stack.Screen name="Nutrition" component={NutritionScreen} />
+          <Stack.Screen name="Profile" component={ProfileScreen} />
+          <Stack.Screen name="NotFound" component={NotFound} />
+        </Stack.Navigator>
+        <Toast config={toastConfig} />
+      </NavigationContainer>
+    </QueryClientProvider>
+  </SafeAreaProvider>
+);
+
+export default App;

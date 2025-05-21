@@ -9,10 +9,12 @@ import {
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
+import { useUserData } from "../hooks/useUserData";
 
 const Index = () => {
   const navigation = useNavigation();
   const windowWidth = Dimensions.get("window").width;
+  const { data: userData } = useUserData();
 
   return (
     <ScrollView
@@ -25,7 +27,9 @@ const Index = () => {
           <View style={styles.avatar}>
             <Icon name="account" size={24} color="#fff" />
           </View>
-          <Text style={styles.headerSubtitle}>Welcome back </Text>
+          <Text style={styles.headerSubtitle}>
+            {userData ? `Welcome back ${userData.firstName}` : "Welcome back"}
+          </Text>
         </View>
         <TouchableOpacity>
           <Icon name="bell-outline" size={24} color="#0066cc" />

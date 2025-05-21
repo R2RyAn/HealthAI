@@ -1,14 +1,28 @@
+import { createRoot } from "react-dom/client";
+import { Platform } from "react-native";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import App from "./App.tsx";
+import "./index.css";
 
-import { createRoot } from 'react-dom/client';
-import { Platform } from 'react-native';
-import App from './App.tsx';
-import './index.css';
+// Create a client
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 // Only run this code on web platform
-if (Platform.OS === 'web') {
+if (Platform.OS === "web") {
   const rootElement = document.getElementById("root");
   if (rootElement) {
-    createRoot(rootElement).render(<App />);
+    createRoot(rootElement).render(
+      <QueryClientProvider client={queryClient}>
+        <App />
+      </QueryClientProvider>
+    );
   } else {
     console.error("Root element not found");
   }

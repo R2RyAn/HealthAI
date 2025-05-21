@@ -25,7 +25,7 @@ const Index = () => {
           <View style={styles.avatar}>
             <Icon name="account" size={24} color="#fff" />
           </View>
-          <Text style={styles.headerSubtitle}>Welcome back</Text>
+          <Text style={styles.headerSubtitle}>Welcome back </Text>
         </View>
         <TouchableOpacity>
           <Icon name="bell-outline" size={24} color="#0066cc" />

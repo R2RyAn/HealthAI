@@ -34,109 +34,7 @@ public class Person {
     @Column(nullable = false)
     private String password;
 
-    public UUID getId() {
-        return id;
-    }
 
-    public void setId(UUID id) {
-        this.id = id;
-    }
-
-    public String getFirstName() {
-        return firstName;
-    }
-
-    public void setFirstName(String firstName) {
-        this.firstName = firstName;
-    }
-
-    public String getLastName() {
-        return lastName;
-    }
-
-    public void setLastName(String lastName) {
-        this.lastName = lastName;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public String getRole() {
-        return role;
-    }
-
-    public void setRole(String role) {
-        this.role = role;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public Integer getAge() {
-        return age;
-    }
-
-    public void setAge(Integer age) {
-        this.age = age;
-    }
-
-    public String getGender() {
-        return gender;
-    }
-
-    public void setGender(String gender) {
-        this.gender = gender;
-    }
-
-    public Float getHeightCm() {
-        return heightCm;
-    }
-
-    public void setHeightCm(Float heightCm) {
-        this.heightCm = heightCm;
-    }
-
-    public Float getWeightKg() {
-        return weightKg;
-    }
-
-    public void setWeightKg(Float weightKg) {
-        this.weightKg = weightKg;
-    }
-
-    public String getGoalType() {
-        return goalType;
-    }
-
-    public void setGoalType(String goalType) {
-        this.goalType = goalType;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
-    }
 
     private Integer age;
 
@@ -151,6 +49,7 @@ public class Person {
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;
+
 
 
     @PrePersist

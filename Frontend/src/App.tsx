@@ -11,6 +11,8 @@ import Workouts from "./pages/Workouts";
 import Nutrition from "./pages/Nutrition";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
+import Login from "./pages/Login";
+import Signup from "./pages/Signup";
 
 const queryClient = new QueryClient();
 const Stack = createNativeStackNavigator();
@@ -23,6 +25,10 @@ const MyTheme = {
     background: "transparent",
   },
 };
+
+// Auth screens without AppLayout
+const LoginScreen = () => <Login />;
+const SignupScreen = () => <Signup />;
 
 // Wrap each screen with AppLayout
 const HomeScreen = () => (
@@ -55,7 +61,7 @@ const App = () => (
       <NavigationContainer theme={MyTheme}>
         <Stack.Navigator
           id={undefined}
-          initialRouteName="Home"
+          initialRouteName="Login"
           screenOptions={{
             headerShown: false,
             contentStyle: { backgroundColor: "transparent" },
@@ -64,6 +70,8 @@ const App = () => (
             presentation: "transparentModal",
           }}
         >
+          <Stack.Screen name="Login" component={LoginScreen} />
+          <Stack.Screen name="Signup" component={SignupScreen} />
           <Stack.Screen name="Home" component={HomeScreen} />
           <Stack.Screen name="Workouts" component={WorkoutsScreen} />
           <Stack.Screen name="Nutrition" component={NutritionScreen} />

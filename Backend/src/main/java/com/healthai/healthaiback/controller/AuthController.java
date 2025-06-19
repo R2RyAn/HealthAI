@@ -1,5 +1,5 @@
 package com.healthai.healthaiback.controller;
-
+import com.healthai.healthaiback.config.TokenResponse;
 import com.healthai.healthaiback.model.LoginRequest;
 import com.healthai.healthaiback.model.Person;
 import com.healthai.healthaiback.service.AuthService;
@@ -34,8 +34,9 @@ public class AuthController {
         boolean success = authService.authenticate(loginRequest.getEmail(), loginRequest.getPassword());
 
         if (success) {
-            String token = jwtService.generateToken(loginRequest.getEmail());
-            return ResponseEntity.ok(token);  // 🪪 Token is returned here
+            String jwt = jwtService.generateToken(loginRequest.getEmail());
+            TokenResponse tokenResponse = new TokenResponse(jwt);  // Wrap the token in a response object
+            return ResponseEntity.ok(tokenResponse);
         } else {
             return ResponseEntity.status(401).body("Invalid email or password.");
         }

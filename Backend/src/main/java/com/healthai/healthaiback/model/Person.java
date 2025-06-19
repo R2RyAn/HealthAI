@@ -16,7 +16,6 @@ import java.util.UUID;
 @AllArgsConstructor
 public class Person {
 
-
     @Id
     @GeneratedValue(generator = "UUID")
     @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
@@ -29,34 +28,27 @@ public class Person {
     @Column(unique = true, nullable = false)
     private String email;
 
-    private String role = "USER";
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Role role = Role.USER;
 
     @Column(nullable = false)
     private String password;
 
-
-
     private Integer age;
-
     private String gender;
-
     private Float heightCm;
-
     private Float weightKg;
-
     private String goalType;
 
     private LocalDateTime createdAt;
-
     private LocalDateTime updatedAt;
-
-
 
     @PrePersist
     protected void onCreate() {
         this.createdAt = this.updatedAt = LocalDateTime.now();
         if (this.role == null) {
-            this.role = "USER";
+            this.role = Role.USER;
         }
     }
 
@@ -64,7 +56,4 @@ public class Person {
     protected void onUpdate() {
         this.updatedAt = LocalDateTime.now();
     }
-
-
 }
-

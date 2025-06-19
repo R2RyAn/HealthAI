@@ -6,6 +6,8 @@ import com.healthai.healthaiback.service.PersonService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.sql.PreparedStatement;
@@ -21,26 +23,34 @@ public class PersonController {
     PersonService personService;
 
     // GET all persons
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/all")
     public ResponseEntity<Person> getAllPersons() {
         return personService.getAllPerson();
     }
 
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping("/me")
+    public ResponseEntity<Person> getCurrentUser(@AuthenticationPrincipal Person person) {
+        return ResponseEntity.ok(person);
+    }
+
+    @PreAuthorize("#id == authentication.principal.id.toString() or hasRole('ADMIN')")
     @GetMapping("/{id}")
     public ResponseEntity<Person> getPersonById(@PathVariable String id) {
         return personService.getPersonById(id);
     }
-
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<Person> createPerson(@RequestBody Person person){
         return personService.createPerson(person);
     }
-
+    @PreAuthorize("#id == authentication.principal.id.toString() or hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Person> deletePerson(@PathVariable String id) {
         return personService.deletePerson(id);
     }
-
+    @PreAuthorize("#id == authentication.principal.id.toString() or hasRole('ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<Person> updatePerson(@PathVariable String id, @RequestBody Person person) {
         return personService.updatePerson(id, person);

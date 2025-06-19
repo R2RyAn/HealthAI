@@ -136,8 +136,12 @@ const Index = () => {
           </View>
           <Text style={styles.smallCardDate}>Last: 01 Oct</Text>
           <View style={styles.weightRow}>
-            <Text style={styles.weightValue}>--</Text>
-            <Text style={styles.weightTarget}>--</Text>
+            <Text style={styles.weightValue}>
+              {userData ? `${userData.weightKg} kg` : "--"}
+            </Text>
+            <Text style={styles.weightTarget}>
+              {userData ? `${userData.goalType}` : "--"}
+            </Text>
           </View>
         </View>
 

@@ -6,21 +6,75 @@ import {
   TouchableOpacity,
   StyleSheet,
   SafeAreaView,
+  Alert,
+  ActivityIndicator,
+  ScrollView,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
+import { authService } from "@/services/auth";
 
 const Signup = () => {
-  const [name, setName] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [age, setAge] = useState("");
+  const [gender, setGender] = useState("");
+  const [heightCm, setHeightCm] = useState("");
+  const [weightKg, setWeightKg] = useState("");
+  const [goalType, setGoalType] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigation = useNavigation();
 
-  const handleSignup = () => {
-    // Handle signup logic here
-    console.log("Signup pressed", { name, email, password, confirmPassword });
-    // After successful signup, navigate to Home or Login
-    // navigation.navigate("Home");
+  const handleSignup = async () => {
+    if (
+      !firstName ||
+      !lastName ||
+      !email ||
+      !password ||
+      !confirmPassword ||
+      !age ||
+      !gender ||
+      !heightCm ||
+      !weightKg ||
+      !goalType
+    ) {
+      Alert.alert("Error", "Please fill in all fields");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      Alert.alert("Error", "Passwords do not match");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const signupData = {
+        firstName,
+        lastName,
+        email,
+        password,
+        age: parseInt(age),
+        gender,
+        heightCm: parseInt(heightCm),
+        weightKg: parseInt(weightKg),
+        goalType,
+      };
+
+      const response = await authService.signup(signupData);
+      Alert.alert("Success", response.message, [
+        {
+          text: "OK",
+          onPress: () => (navigation as any).navigate("Login"),
+        },
+      ]);
+    } catch (error: any) {
+      Alert.alert("Error", error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const navigateToLogin = () => {
@@ -29,73 +83,163 @@ const Signup = () => {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <View style={styles.container}>
-        <View style={styles.header}>
-          <Text style={styles.title}>Create Account</Text>
-          <Text style={styles.subtitle}>Join us to get started</Text>
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
+        <View style={styles.container}>
+          <View style={styles.header}>
+            <Text style={styles.title}>Create Account</Text>
+            <Text style={styles.subtitle}>Join us to get started</Text>
+          </View>
+
+          <View style={styles.form}>
+            <View style={styles.row}>
+              <View style={[styles.inputContainer, styles.halfWidth]}>
+                <Text style={styles.label}>First Name</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="First name"
+                  value={firstName}
+                  onChangeText={setFirstName}
+                  autoComplete="given-name"
+                  editable={!loading}
+                />
+              </View>
+              <View style={[styles.inputContainer, styles.halfWidth]}>
+                <Text style={styles.label}>Last Name</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Last name"
+                  value={lastName}
+                  onChangeText={setLastName}
+                  autoComplete="family-name"
+                  editable={!loading}
+                />
+              </View>
+            </View>
+
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Email</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Enter your email"
+                value={email}
+                onChangeText={setEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoComplete="email"
+                editable={!loading}
+              />
+            </View>
+
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Password</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Enter your password"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry
+                autoComplete="new-password"
+                editable={!loading}
+              />
+            </View>
+
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Confirm Password</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Confirm your password"
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+                secureTextEntry
+                autoComplete="new-password"
+                editable={!loading}
+              />
+            </View>
+
+            <View style={styles.row}>
+              <View style={[styles.inputContainer, styles.halfWidth]}>
+                <Text style={styles.label}>Age</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Age"
+                  value={age}
+                  onChangeText={setAge}
+                  keyboardType="numeric"
+                  editable={!loading}
+                />
+              </View>
+              <View style={[styles.inputContainer, styles.halfWidth]}>
+                <Text style={styles.label}>Gender</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Male/Female/Other"
+                  value={gender}
+                  onChangeText={setGender}
+                  editable={!loading}
+                />
+              </View>
+            </View>
+
+            <View style={styles.row}>
+              <View style={[styles.inputContainer, styles.halfWidth]}>
+                <Text style={styles.label}>Height (cm)</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Height"
+                  value={heightCm}
+                  onChangeText={setHeightCm}
+                  keyboardType="numeric"
+                  editable={!loading}
+                />
+              </View>
+              <View style={[styles.inputContainer, styles.halfWidth]}>
+                <Text style={styles.label}>Weight (kg)</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Weight"
+                  value={weightKg}
+                  onChangeText={setWeightKg}
+                  keyboardType="numeric"
+                  editable={!loading}
+                />
+              </View>
+            </View>
+
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Goal Type</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="e.g., Weight Loss, Muscle Gain, Maintenance"
+                value={goalType}
+                onChangeText={setGoalType}
+                editable={!loading}
+              />
+            </View>
+
+            <TouchableOpacity
+              style={[
+                styles.signupButton,
+                loading && styles.signupButtonDisabled,
+              ]}
+              onPress={handleSignup}
+              disabled={loading}
+            >
+              {loading ? (
+                <ActivityIndicator color="#ffffff" />
+              ) : (
+                <Text style={styles.signupButtonText}>Create Account</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.footer}>
+            <Text style={styles.footerText}>Already have an account? </Text>
+            <TouchableOpacity onPress={navigateToLogin} disabled={loading}>
+              <Text style={styles.loginLink}>Sign in</Text>
+            </TouchableOpacity>
+          </View>
         </View>
-
-        <View style={styles.form}>
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Full Name</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Enter your full name"
-              value={name}
-              onChangeText={setName}
-              autoComplete="name"
-            />
-          </View>
-
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Email</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Enter your email"
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoComplete="email"
-            />
-          </View>
-
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Password</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Enter your password"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry
-              autoComplete="new-password"
-            />
-          </View>
-
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Confirm Password</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Confirm your password"
-              value={confirmPassword}
-              onChangeText={setConfirmPassword}
-              secureTextEntry
-              autoComplete="new-password"
-            />
-          </View>
-
-          <TouchableOpacity style={styles.signupButton} onPress={handleSignup}>
-            <Text style={styles.signupButtonText}>Create Account</Text>
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.footer}>
-          <Text style={styles.footerText}>Already have an account? </Text>
-          <TouchableOpacity onPress={navigateToLogin}>
-            <Text style={styles.loginLink}>Sign in</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 };
@@ -105,14 +249,18 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#f8f9fa",
   },
+  scrollContainer: {
+    flexGrow: 1,
+  },
   container: {
     flex: 1,
     paddingHorizontal: 24,
-    justifyContent: "center",
+    paddingVertical: 20,
   },
   header: {
     alignItems: "center",
-    marginBottom: 40,
+    marginBottom: 30,
+    marginTop: 20,
   },
   title: {
     fontSize: 32,
@@ -125,10 +273,17 @@ const styles = StyleSheet.create({
     color: "#6b7280",
   },
   form: {
-    marginBottom: 32,
+    marginBottom: 20,
+  },
+  row: {
+    flexDirection: "row",
+    justifyContent: "space-between",
   },
   inputContainer: {
     marginBottom: 20,
+  },
+  halfWidth: {
+    width: "48%",
   },
   label: {
     fontSize: 14,
@@ -162,6 +317,9 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
+  signupButtonDisabled: {
+    backgroundColor: "#9ca3af",
+  },
   signupButtonText: {
     color: "#ffffff",
     fontSize: 18,
@@ -171,6 +329,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
+    marginTop: 20,
   },
   footerText: {
     fontSize: 16,

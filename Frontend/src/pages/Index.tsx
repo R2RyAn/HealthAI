@@ -148,12 +148,21 @@ const Index = () => {
         <View style={styles.smallCard}>{/* Empty card for symmetry */}</View>
       </View>
 
-      {/* Search Bar */}
-      <TouchableOpacity style={styles.searchBar}>
-        <Icon name="magnify" size={20} color="#333" />
-        <Text style={styles.searchBarText}>Search for a food</Text>
-        <Icon name="microphone" size={20} color="#333" />
-      </TouchableOpacity>
+      {/* Search and Scan Section */}
+      <View style={styles.searchSection}>
+        <TouchableOpacity style={styles.searchBar}>
+          <Icon name="magnify" size={20} color="#333" />
+          <Text style={styles.searchBarText}>Search for a food</Text>
+          <Icon name="microphone" size={20} color="#333" />
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.scanButton}
+          onPress={() => navigation.navigate("Scanner" as never)}
+        >
+          <Icon name="qrcode-scan" size={24} color="#fff" />
+        </TouchableOpacity>
+      </View>
     </ScrollView>
   );
 };
@@ -385,12 +394,18 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#666",
   },
+  searchSection: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginVertical: 16,
+    gap: 12,
+  },
   searchBar: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     backgroundColor: "#fff",
-    marginVertical: 16,
+    flex: 1,
     borderRadius: 24,
     paddingHorizontal: 16,
     paddingVertical: 12,
@@ -405,6 +420,19 @@ const styles = StyleSheet.create({
     color: "#999",
     flex: 1,
     marginLeft: 8,
+  },
+  scanButton: {
+    backgroundColor: "#0066cc",
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
   },
 });
 

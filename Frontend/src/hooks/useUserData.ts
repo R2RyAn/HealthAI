@@ -7,7 +7,7 @@ export const useUserData = () => {
     queryFn: async () => {
       try {
         const { data } = await api.get<User>("/person/me");
-        console.log("✅ User data loaded:", data);
+        console.log("✅ User data loaded");
         return data;
       } catch (error) {
         console.error("🚨 Error loading user data:", error);

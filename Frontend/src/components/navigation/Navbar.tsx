@@ -20,14 +20,14 @@ const navItems = [
     icon: "food-apple",
   },
   {
+    path: "Scanner",
+    name: "Scan",
+    icon: "qrcode-scan",
+  },
+  {
     path: "Profile",
     name: "Me",
     icon: "account",
-  },
-  {
-    path: "More",
-    name: "More",
-    icon: "dots-horizontal",
   },
 ];
 

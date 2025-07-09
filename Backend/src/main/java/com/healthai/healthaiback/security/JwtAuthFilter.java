@@ -34,6 +34,10 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
 
+        // ✅ Add this at the very top:
+        System.out.println("FILTER — Before check: " + request.getRequestURI());
+        System.out.println("FILTER — Context auth BEFORE: " + SecurityContextHolder.getContext().getAuthentication());
+
         final String authHeader = request.getHeader("Authorization");
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
@@ -47,7 +51,6 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         try {
             email = jwtService.extractEmail(token);
         } catch (JwtException | IllegalArgumentException e) {
-            // Invalid token — skip setting authentication
             filterChain.doFilter(request, response);
             return;
         }
@@ -56,7 +59,6 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             Optional<Person> user = personRepository.findByEmail(email);
 
             if (user.isPresent()) {
-                // Add user's role as Spring Security authority
                 List<SimpleGrantedAuthority> authorities = List.of(
                         new SimpleGrantedAuthority("ROLE_" + user.get().getRole().name())
                 );
@@ -67,9 +69,17 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authToken);
+
+                // ✅ Log after setting it:
+                System.out.println("FILTER — Context auth AFTER: " + SecurityContextHolder.getContext().getAuthentication());
             }
         }
 
+        // ✅ Optional: still log the raw header
+        System.out.println("Authorization header: " + request.getHeader("Authorization"));
+        System.out.println("Is token valid? ...");
+
         filterChain.doFilter(request, response);
     }
+
 }

@@ -7,10 +7,12 @@ import {
   ScrollView,
   TextInput,
   Alert,
+  ActivityIndicator,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import { useNutrition } from "../contexts/NutritionContext";
+import { nutritionApi, NewNutritionEntry } from "../services/nutritionApi";
 
 const AddMeal = () => {
   const navigation = useNavigation();
@@ -21,8 +23,13 @@ const AddMeal = () => {
   const [protein, setProtein] = useState("");
   const [carbs, setCarbs] = useState("");
   const [fat, setFat] = useState("");
+  const [mealType, setMealType] = useState<
+    "Breakfast" | "Lunch" | "Dinner" | "Snack"
+  >("Lunch");
+  const [notes, setNotes] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleAddMeal = () => {
+  const handleAddMeal = async () => {
     // Validate inputs
     if (!mealName.trim()) {
       Alert.alert("Error", "Please enter a meal name");
@@ -49,28 +56,49 @@ const AddMeal = () => {
       return;
     }
 
-    // Create meal object
-    const meal = {
-      name: mealName.trim(),
-      calories: caloriesNum,
-      proteins: proteinNum,
-      carbs: carbsNum,
-      fats: fatNum,
-      brand: "Manual Entry",
-      barcode: "",
-      image: "",
-    };
+    setIsSubmitting(true);
 
-    // Add to nutrition context
-    addProduct(meal);
+    try {
+      // Create nutrition entry for backend
+      const nutritionEntry: NewNutritionEntry = {
+        entryDate: new Date().toISOString(),
+        calories: caloriesNum,
+        protein: proteinNum,
+        carbs: carbsNum,
+        fat: fatNum,
+        mealType: mealType,
+        notes: notes.trim() || `${mealName.trim()} - ${mealType}`,
+      };
 
-    // Show success message
-    Alert.alert("Success", "Meal added successfully!", [
-      {
-        text: "OK",
-        onPress: () => navigation.goBack(),
-      },
-    ]);
+      // Send to backend
+      await nutritionApi.addNutritionEntry(nutritionEntry);
+
+      // Also add to local nutrition context for immediate UI update
+      const localMeal = {
+        name: mealName.trim(),
+        calories: caloriesNum,
+        proteins: proteinNum,
+        carbs: carbsNum,
+        fats: fatNum,
+        brand: "Manual Entry",
+        barcode: "",
+        image: "",
+      };
+
+      addProduct(localMeal);
+
+      // Show success message
+      Alert.alert("Success", "Meal added successfully!", [
+        {
+          text: "OK",
+          onPress: () => navigation.goBack(),
+        },
+      ]);
+    } catch (error) {
+      Alert.alert("Error", "Failed to add meal. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleReset = () => {
@@ -79,6 +107,8 @@ const AddMeal = () => {
     setProtein("");
     setCarbs("");
     setFat("");
+    setMealType("Lunch");
+    setNotes("");
   };
 
   return (
@@ -109,6 +139,32 @@ const AddMeal = () => {
           onChangeText={setMealName}
           placeholderTextColor="#999"
         />
+      </View>
+
+      {/* Meal Type Selection */}
+      <View style={styles.inputSection}>
+        <Text style={styles.sectionTitle}>Meal Type</Text>
+        <View style={styles.mealTypeContainer}>
+          {(["Breakfast", "Lunch", "Dinner", "Snack"] as const).map((type) => (
+            <TouchableOpacity
+              key={type}
+              style={[
+                styles.mealTypeButton,
+                mealType === type && styles.mealTypeButtonActive,
+              ]}
+              onPress={() => setMealType(type)}
+            >
+              <Text
+                style={[
+                  styles.mealTypeText,
+                  mealType === type && styles.mealTypeTextActive,
+                ]}
+              >
+                {type}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
       </View>
 
       {/* Nutrition Inputs */}
@@ -166,6 +222,20 @@ const AddMeal = () => {
             />
           </View>
         </View>
+      </View>
+
+      {/* Notes Input */}
+      <View style={styles.inputSection}>
+        <Text style={styles.sectionTitle}>Notes (Optional)</Text>
+        <TextInput
+          style={[styles.textInput, styles.notesInput]}
+          placeholder="Add any notes about this meal..."
+          value={notes}
+          onChangeText={setNotes}
+          placeholderTextColor="#999"
+          multiline
+          numberOfLines={3}
+        />
       </View>
 
       {/* Quick Add Buttons */}
@@ -237,9 +307,19 @@ const AddMeal = () => {
           <Text style={styles.resetButtonText}>Reset</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.addButton} onPress={handleAddMeal}>
-          <Icon name="plus" size={20} color="#fff" />
-          <Text style={styles.addButtonText}>Add Meal</Text>
+        <TouchableOpacity
+          style={[styles.addButton, isSubmitting && styles.addButtonDisabled]}
+          onPress={handleAddMeal}
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? (
+            <ActivityIndicator color="#fff" size="small" />
+          ) : (
+            <Icon name="plus" size={20} color="#fff" />
+          )}
+          <Text style={styles.addButtonText}>
+            {isSubmitting ? "Adding..." : "Add Meal"}
+          </Text>
         </TouchableOpacity>
       </View>
     </ScrollView>
@@ -376,6 +456,44 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     color: "#fff",
     marginLeft: 8,
+  },
+  addButtonDisabled: {
+    backgroundColor: "#ccc",
+  },
+  mealTypeContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 12,
+  },
+
+  mealTypeButton: {
+    backgroundColor: "#f0f0f0",
+    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 14, // wider
+    alignItems: "center",
+    justifyContent: "center", // center vertically
+    flex: 1,
+    marginHorizontal: 4,
+  },
+
+  mealTypeButtonActive: {
+    backgroundColor: "#0066cc",
+  },
+
+  mealTypeText: {
+    fontSize: 14,
+    fontWeight: "500",
+    color: "#666",
+    textAlign: "center", // center horizontally
+  },
+
+  mealTypeTextActive: {
+    color: "#fff",
+  },
+  notesInput: {
+    height: 80,
+    textAlignVertical: "top",
   },
 });
 

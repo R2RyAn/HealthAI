@@ -30,7 +30,7 @@ export const fetchProductByBarcode = async (
         throw new Error("Product not found");
       }
       if (response.status === 403) {
-        throw new Error("Unauthorized access");
+        throw new Error("Unauthorized access fetch by barcode");
       }
       throw new Error(`HTTP error! status: ${response.status}`);
     }

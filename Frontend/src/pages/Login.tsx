@@ -27,12 +27,7 @@ const Login = () => {
     setLoading(true);
     try {
       const response = await authService.login({ email, password });
-      Alert.alert("Success", response.message, [
-        {
-          text: "OK",
-          onPress: () => (navigation as any).navigate("Home"),
-        },
-      ]);
+      navigation.navigate("Home" as never);
     } catch (error: any) {
       Alert.alert("Error", error.message);
     } finally {

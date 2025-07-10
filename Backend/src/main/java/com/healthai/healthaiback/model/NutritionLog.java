@@ -1,6 +1,7 @@
 package com.healthai.healthaiback.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -35,7 +36,11 @@ public class NutritionLog {
     private Float carbs;
     private Float fat;
 
-    private String mealType;
+    @NotNull
+    @Enumerated(EnumType.STRING)
+    private MealType mealType;
+
+
     private String notes;
 
     private LocalDateTime createdAt;

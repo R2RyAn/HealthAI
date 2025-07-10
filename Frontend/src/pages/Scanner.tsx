@@ -56,17 +56,13 @@ export default function Scanner() {
           [{ text: "OK" }]
         );
       } catch (error) {
-        console.error("Error processing scanned product:", error);
         Alert.alert(
-          "Cannot Find Nutritional Values",
-          "The product was not found in our database. Please add the nutritional values manually.",
+          "Error",
+          "Could not find product information. Please add manually.",
           [
             {
               text: "Add Manually",
-              onPress: () => {
-                // Navigate to manual entry or show manual input
-                navigation.navigate("Nutrition" as never);
-              },
+              onPress: () => navigation.navigate("AddMeal" as never),
             },
             { text: "Cancel" },
           ]

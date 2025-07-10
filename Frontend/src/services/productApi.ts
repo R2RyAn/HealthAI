@@ -1,3 +1,6 @@
+import { Alert } from "react-native";
+import { authService } from "../services/auth";
+
 export interface ProductData {
   name: string | null;
   calories: number;
@@ -10,33 +13,36 @@ export const fetchProductByBarcode = async (
   barcode: string
 ): Promise<ProductData> => {
   try {
+    const token = await authService.getToken();
+
     const response = await fetch(
-      `http://10.0.0.169:8080/api/products/${barcode}`
+      `http://10.0.0.169:8080/api/products/${barcode}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/json",
+        },
+      }
     );
 
     if (!response.ok) {
       if (response.status === 404) {
         throw new Error("Product not found");
       }
+      if (response.status === 403) {
+        throw new Error("Unauthorized access");
+      }
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
     const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error("Error fetching product:", error);
 
-    // Check if it's a network error
-    if (error instanceof TypeError && error.message.includes("fetch")) {
-      throw new Error("Network request failed - please check your connection");
-    }
-
-    // Check if it's a product not found error
-    if (error instanceof Error && error.message === "Product not found") {
+    if (data.name === null) {
       throw new Error("Product not found in database");
     }
 
-    // Generic error
-    throw new Error("Failed to fetch product information");
+    return data;
+  } catch (error) {
+    throw new Error("Product not found");
   }
 };

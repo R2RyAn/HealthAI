@@ -5,6 +5,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   Animated,
+  Alert,
 } from "react-native";
 import {
   CameraView,
@@ -13,22 +14,64 @@ import {
 } from "expo-camera";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import { useNavigation } from "@react-navigation/native";
+import { fetchProductByBarcode } from "../services/productApi";
+import { useNutrition } from "../contexts/NutritionContext";
 
 export default function Scanner() {
   const navigation = useNavigation();
+  const { addProduct } = useNutrition();
   const [permission, requestPermission] = useCameraPermissions();
   const [scanned, setScanned] = useState(false);
   const [flash, setFlash] = useState<"on" | "off">("off");
   const [showCheck, setShowCheck] = useState(false);
   const cameraRef = useRef<CameraView>(null);
+  const isScanningRef = useRef(false);
 
   // Handle barcode/QR scan with useCallback for better performance
   const handleBarCodeScanned = useCallback(
-    (result: BarcodeScanningResult) => {
-      if (scanned) return;
+    async (result: BarcodeScanningResult) => {
+      // Immediately check if already scanning to prevent multiple calls
+      if (isScanningRef.current || scanned) return;
 
+      // Set scanning flag immediately
+      isScanningRef.current = true;
       setScanned(true);
       setShowCheck(true);
+
+      try {
+        // Fetch product data from API
+        const productData = await fetchProductByBarcode(result.data);
+
+        // Add product to nutrition totals
+        addProduct(productData);
+
+        // Show success message
+        Alert.alert(
+          "Product Added!",
+          `${productData.name || "Product"}\nCalories: ${
+            productData.calories
+          } kcal\nProtein: ${productData.proteins}g\nCarbs: ${
+            productData.carbs
+          }g\nFat: ${productData.fats}g`,
+          [{ text: "OK" }]
+        );
+      } catch (error) {
+        console.error("Error processing scanned product:", error);
+        Alert.alert(
+          "Cannot Find Nutritional Values",
+          "The product was not found in our database. Please add the nutritional values manually.",
+          [
+            {
+              text: "Add Manually",
+              onPress: () => {
+                // Navigate to manual entry or show manual input
+                navigation.navigate("Nutrition" as never);
+              },
+            },
+            { text: "Cancel" },
+          ]
+        );
+      }
 
       // Show checkmark for 1 second, then go back to previous page
       setTimeout(() => {
@@ -37,10 +80,9 @@ export default function Scanner() {
         navigation.navigate("Home" as never);
       }, 1000);
 
-      // You can handle the scanned data here (e.g., save to state, call API, etc.)
       console.log("Scanned:", result.data, result.type);
     },
-    [scanned, navigation]
+    [scanned, navigation, addProduct]
   );
 
   if (!permission) return null;
@@ -82,7 +124,9 @@ export default function Scanner() {
             "itf14",
           ],
         }}
-        onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
+        onBarcodeScanned={
+          isScanningRef.current ? undefined : handleBarCodeScanned
+        }
         enableTorch={flash === "on"}
       >
         <View style={styles.overlay}>

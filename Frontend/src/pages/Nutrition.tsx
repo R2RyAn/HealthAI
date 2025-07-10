@@ -8,11 +8,11 @@ import {
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
-import { useScannedFood } from "../hooks/useScannedFood";
+import { useNutrition } from "../contexts/NutritionContext";
 
 const Nutrition = () => {
   const navigation = useNavigation();
-  const { scannedFoods } = useScannedFood();
+  const { totals, scannedProducts, resetTotals } = useNutrition();
 
   return (
     <ScrollView
@@ -24,7 +24,31 @@ const Nutrition = () => {
       }}
     >
       <Text style={styles.title}>Nutrition</Text>
-      <Text style={styles.subtitle}>Your meal plans will appear here</Text>
+      <Text style={styles.subtitle}>Track your daily nutrition</Text>
+
+      {/* Totals Section */}
+      <View style={styles.totalsSection}>
+        <Text style={styles.sectionTitle}>Today's Totals</Text>
+        <View style={styles.totalsGrid}>
+          <View style={styles.totalCard}>
+            <Text style={styles.totalValue}>{totals.calories}</Text>
+            <Text style={styles.totalLabel}>Calories</Text>
+          </View>
+          <View style={styles.totalCard}>
+            <Text style={styles.totalValue}>{totals.proteins.toFixed(1)}g</Text>
+            <Text style={styles.totalLabel}>Protein</Text>
+          </View>
+          <View style={styles.totalCard}>
+            <Text style={styles.totalValue}>{totals.carbs.toFixed(1)}g</Text>
+            <Text style={styles.totalLabel}>Carbs</Text>
+          </View>
+          <View style={styles.totalCard}>
+            <Text style={styles.totalValue}>{totals.fats.toFixed(1)}g</Text>
+            <Text style={styles.totalLabel}>Fat</Text>
+          </View>
+        </View>
+      </View>
+
       <TouchableOpacity
         style={styles.scanButton}
         onPress={() => navigation.navigate("Scanner" as never)}
@@ -32,25 +56,28 @@ const Nutrition = () => {
         <Icon name="qrcode-scan" size={24} color="#fff" />
         <Text style={styles.scanButtonText}>Scan Food</Text>
       </TouchableOpacity>
-      {scannedFoods.length > 0 && (
+
+      {scannedProducts.length > 0 && (
         <View style={styles.scannedFoodsSection}>
-          <Text style={styles.sectionTitle}>Recently Scanned</Text>
-          {scannedFoods.map((food, index) => (
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Recently Scanned</Text>
+            <TouchableOpacity onPress={resetTotals}>
+              <Text style={styles.resetButton}>Reset</Text>
+            </TouchableOpacity>
+          </View>
+          {scannedProducts.map((food, index) => (
             <View key={index} style={styles.foodCard}>
               <View style={styles.foodHeader}>
-                <Text style={styles.foodName}>{food.name}</Text>
+                <Text style={styles.foodName}>{food.name || "Product"}</Text>
                 <Text style={styles.foodCalories}>{food.calories} kcal</Text>
               </View>
               <View style={styles.nutritionRow}>
                 <Text style={styles.nutritionLabel}>
-                  Protein: {food.protein}g
+                  Protein: {food.proteins}g
                 </Text>
                 <Text style={styles.nutritionLabel}>Carbs: {food.carbs}g</Text>
-                <Text style={styles.nutritionLabel}>Fat: {food.fat}g</Text>
+                <Text style={styles.nutritionLabel}>Fat: {food.fats}g</Text>
               </View>
-              <Text style={styles.foodTimestamp}>
-                Scanned: {food.timestamp.toLocaleTimeString()}
-              </Text>
             </View>
           ))}
         </View>
@@ -141,6 +168,51 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: "#999",
     fontStyle: "italic",
+  },
+  totalsSection: {
+    marginTop: 20,
+    width: "100%",
+  },
+  totalsGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+    marginTop: 12,
+  },
+  totalCard: {
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    padding: 16,
+    width: "48%",
+    marginBottom: 12,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  totalValue: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#0066cc",
+    marginBottom: 4,
+  },
+  totalLabel: {
+    fontSize: 12,
+    color: "#666",
+    textAlign: "center",
+  },
+  sectionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  resetButton: {
+    color: "#ff4444",
+    fontSize: 14,
+    fontWeight: "600",
   },
 });
 

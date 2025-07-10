@@ -10,11 +10,13 @@ import {
 import { useNavigation } from "@react-navigation/native";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import { useUserData } from "../hooks/useUserData";
+import { useNutrition } from "../contexts/NutritionContext";
 
 const Index = () => {
   const navigation = useNavigation();
   const windowWidth = Dimensions.get("window").width;
   const { data: userData } = useUserData();
+  const { totals } = useNutrition();
 
   return (
     <ScrollView
@@ -56,28 +58,34 @@ const Index = () => {
         <View style={styles.caloriesContent}>
           <View style={styles.calorieCircleContainer}>
             <View style={styles.calorieCircle}>
-              <Text style={styles.calorieNumber}>Nan</Text>
-              <Text style={styles.calorieLabel}>Remaining</Text>
+              <Text style={styles.calorieNumber}>{totals.calories}</Text>
+              <Text style={styles.calorieLabel}>Calories</Text>
             </View>
           </View>
 
           <View style={styles.nutritionStats}>
             <View style={styles.nutritionStatRow}>
               <Icon name="flag-outline" size={20} color="#666" />
-              <Text style={styles.nutritionStatLabel}>Base Goal</Text>
-              <Text style={styles.nutritionStatValue}>Nan</Text>
+              <Text style={styles.nutritionStatLabel}>Protein</Text>
+              <Text style={styles.nutritionStatValue}>
+                {totals.proteins.toFixed(1)}g
+              </Text>
             </View>
 
             <View style={styles.nutritionStatRow}>
               <Icon name="silverware-fork-knife" size={20} color="#666" />
-              <Text style={styles.nutritionStatLabel}>Food</Text>
-              <Text style={styles.nutritionStatValue}>Nan</Text>
+              <Text style={styles.nutritionStatLabel}>Carbs</Text>
+              <Text style={styles.nutritionStatValue}>
+                {totals.carbs.toFixed(1)}g
+              </Text>
             </View>
 
             <View style={styles.nutritionStatRow}>
               <Icon name="fire" size={20} color="#ff6b00" />
-              <Text style={styles.nutritionStatLabel}>Exercise</Text>
-              <Text style={styles.nutritionStatValue}>Nan</Text>
+              <Text style={styles.nutritionStatLabel}>Fat</Text>
+              <Text style={styles.nutritionStatValue}>
+                {totals.fats.toFixed(1)}g
+              </Text>
             </View>
           </View>
         </View>
@@ -148,20 +156,39 @@ const Index = () => {
         <View style={styles.smallCard}>{/* Empty card for symmetry */}</View>
       </View>
 
-      {/* Search and Scan Section */}
-      <View style={styles.searchSection}>
-        <TouchableOpacity style={styles.searchBar}>
-          <Icon name="magnify" size={20} color="#333" />
-          <Text style={styles.searchBarText}>Search for a food</Text>
-          <Icon name="microphone" size={20} color="#333" />
-        </TouchableOpacity>
+      {/* Quick Actions Section */}
+      <View style={styles.quickActionsSection}>
+        <Text style={styles.sectionTitle}>Quick Actions</Text>
+        <View style={styles.quickActionsGrid}>
+          <TouchableOpacity
+            style={styles.quickActionButton}
+            onPress={() => navigation.navigate("AddMeal" as never)}
+          >
+            <Icon name="food-plus" size={24} color="#0066cc" />
+            <Text style={styles.quickActionText}>Add Meal</Text>
+          </TouchableOpacity>
 
-        <TouchableOpacity
-          style={styles.scanButton}
-          onPress={() => navigation.navigate("Scanner" as never)}
-        >
-          <Icon name="qrcode-scan" size={24} color="#fff" />
-        </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.quickActionButton}
+            onPress={() => navigation.navigate("BodyFatPredict" as never)}
+          >
+            <Icon name="camera" size={24} color="#0066cc" />
+            <Text style={styles.quickActionText}>Body Fat AI</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.quickActionButton}
+            onPress={() => navigation.navigate("Scanner" as never)}
+          >
+            <Icon name="qrcode-scan" size={24} color="#0066cc" />
+            <Text style={styles.quickActionText}>Scan Food</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.quickActionButton}>
+            <Icon name="magnify" size={24} color="#0066cc" />
+            <Text style={styles.quickActionText}>Search Food</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </ScrollView>
   );
@@ -394,45 +421,39 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#666",
   },
-  searchSection: {
-    flexDirection: "row",
-    alignItems: "center",
+  quickActionsSection: {
     marginVertical: 16,
-    gap: 12,
   },
-  searchBar: {
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#000",
+    marginBottom: 12,
+  },
+  quickActionsGrid: {
     flexDirection: "row",
-    alignItems: "center",
+    flexWrap: "wrap",
     justifyContent: "space-between",
+  },
+  quickActionButton: {
     backgroundColor: "#fff",
-    flex: 1,
-    borderRadius: 24,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  searchBarText: {
-    fontSize: 16,
-    color: "#999",
-    flex: 1,
-    marginLeft: 8,
-  },
-  scanButton: {
-    backgroundColor: "#0066cc",
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    justifyContent: "center",
+    borderRadius: 10,
+    padding: 16,
+    width: "48%",
     alignItems: "center",
+    marginBottom: 12,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 2,
     elevation: 2,
+  },
+  quickActionText: {
+    fontSize: 14,
+    fontWeight: "500",
+    color: "#000",
+    marginTop: 8,
+    textAlign: "center",
   },
 });
 

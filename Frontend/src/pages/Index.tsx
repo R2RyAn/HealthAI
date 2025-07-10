@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -6,17 +6,80 @@ import {
   TouchableOpacity,
   ScrollView,
   Dimensions,
+  Alert,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import { useUserData } from "../hooks/useUserData";
 import { useNutrition } from "../contexts/NutritionContext";
+import { nutritionApi, DailyTotals } from "../services/nutritionApi";
+import Svg, { G, Circle } from "react-native-svg";
 
 const Index = () => {
   const navigation = useNavigation();
   const windowWidth = Dimensions.get("window").width;
   const { data: userData } = useUserData();
   const { totals } = useNutrition();
+  const [dailyTotals, setDailyTotals] = useState<Record<string, DailyTotals>>(
+    {}
+  );
+  const [todayKey, setTodayKey] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const today = new Date().toISOString().split("T")[0];
+    setTodayKey(today);
+    loadNutritionData();
+  }, []);
+
+  const loadNutritionData = async () => {
+    try {
+      setIsLoading(true);
+      const data = await nutritionApi.getDailyTotals();
+      setDailyTotals(data);
+    } catch (error) {
+      // Silently fail for now, keep using local totals
+      console.log("Failed to load nutrition data from backend");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const todayData = dailyTotals[todayKey] || {
+    calories: 0,
+    protein: 0,
+    carbs: 0,
+    fat: 0,
+    meals: [],
+  };
+
+  // Use backend data if available, otherwise fall back to local totals
+  const displayTotals = {
+    calories: todayData.calories || totals.calories,
+    proteins: todayData.protein || totals.proteins,
+    carbs: todayData.carbs || totals.carbs,
+    fats: todayData.fat || totals.fats,
+  };
+
+  // Donut chart calculations
+  const radius = 50;
+  const strokeWidth = 7;
+  const center = 40;
+  const svgSize = radius * 2 + strokeWidth + 4; // Add padding to prevent clipping
+  const circleCircumference = 2 * Math.PI * radius;
+  const protein = displayTotals.proteins > 0 ? displayTotals.proteins : 0;
+  const carbs = displayTotals.carbs > 0 ? displayTotals.carbs : 0;
+  const fat = displayTotals.fats > 0 ? displayTotals.fats : 0;
+  const total = protein + carbs + fat;
+
+  // Avoid division by zero
+  const proteinPerc = total ? protein / total : 0;
+  const carbsPerc = total ? carbs / total : 0;
+  const fatPerc = total ? fat / total : 0;
+
+  const proteinArc = proteinPerc * circleCircumference;
+  const carbsArc = carbsPerc * circleCircumference;
+  const fatArc = fatPerc * circleCircumference;
 
   return (
     <ScrollView
@@ -56,35 +119,102 @@ const Index = () => {
         </View>
 
         <View style={styles.caloriesContent}>
-          <View style={styles.calorieCircleContainer}>
-            <View style={styles.calorieCircle}>
-              <Text style={styles.calorieNumber}>{totals.calories}</Text>
-              <Text style={styles.calorieLabel}>Calories</Text>
+          <View style={styles.donutChartContainer}>
+            <View style={{ alignItems: "center", justifyContent: "center" }}>
+              <Svg
+                height={svgSize}
+                width={svgSize}
+                viewBox={`0 0 ${svgSize} ${svgSize}`}
+                style={{ overflow: "visible" }}
+              >
+                <G rotation={-90} originX={svgSize / 2} originY={svgSize / 2}>
+                  {/* Background */}
+                  <Circle
+                    cx={svgSize / 2}
+                    cy={svgSize / 2}
+                    r={radius}
+                    stroke="#F1F6F9"
+                    fill="transparent"
+                    strokeWidth={strokeWidth}
+                  />
+                  {/* Protein Arc */}
+                  {protein > 0 && (
+                    <Circle
+                      cx={svgSize / 2}
+                      cy={svgSize / 2}
+                      r={radius}
+                      stroke="#0066cc"
+                      fill="transparent"
+                      strokeWidth={strokeWidth}
+                      strokeDasharray={circleCircumference}
+                      strokeDashoffset={0}
+                      strokeLinecap="round"
+                    />
+                  )}
+                  {/* Carbs Arc */}
+                  {carbs > 0 && (
+                    <Circle
+                      cx={svgSize / 2}
+                      cy={svgSize / 2}
+                      r={radius}
+                      stroke="#ff6b00"
+                      fill="transparent"
+                      strokeWidth={strokeWidth}
+                      strokeDasharray={circleCircumference}
+                      strokeDashoffset={-proteinArc}
+                      strokeLinecap="round"
+                    />
+                  )}
+                  {/* Fat Arc */}
+                  {fat > 0 && (
+                    <Circle
+                      cx={svgSize / 2}
+                      cy={svgSize / 2}
+                      r={radius}
+                      stroke="#ffb700"
+                      fill="transparent"
+                      strokeWidth={strokeWidth}
+                      strokeDasharray={circleCircumference}
+                      strokeDashoffset={-(proteinArc + carbsArc)}
+                      strokeLinecap="round"
+                    />
+                  )}
+                </G>
+              </Svg>
+              <View
+                style={styles.donutCenterAbsoluteSmall}
+                pointerEvents="none"
+              >
+                <Text style={styles.calorieNumber}>
+                  {displayTotals.calories}
+                </Text>
+                <Text style={styles.calorieLabel}>Calories</Text>
+              </View>
             </View>
           </View>
 
           <View style={styles.nutritionStats}>
             <View style={styles.nutritionStatRow}>
-              <Icon name="flag-outline" size={20} color="#666" />
+              <View style={[styles.macroIndicator, styles.proteinIndicator]} />
               <Text style={styles.nutritionStatLabel}>Protein</Text>
               <Text style={styles.nutritionStatValue}>
-                {totals.proteins.toFixed(1)}g
+                {displayTotals.proteins.toFixed(1)}g
               </Text>
             </View>
 
             <View style={styles.nutritionStatRow}>
-              <Icon name="silverware-fork-knife" size={20} color="#666" />
+              <View style={[styles.macroIndicator, styles.carbsIndicator]} />
               <Text style={styles.nutritionStatLabel}>Carbs</Text>
               <Text style={styles.nutritionStatValue}>
-                {totals.carbs.toFixed(1)}g
+                {displayTotals.carbs.toFixed(1)}g
               </Text>
             </View>
 
             <View style={styles.nutritionStatRow}>
-              <Icon name="fire" size={20} color="#ff6b00" />
+              <View style={[styles.macroIndicator, styles.fatIndicator]} />
               <Text style={styles.nutritionStatLabel}>Fat</Text>
               <Text style={styles.nutritionStatValue}>
-                {totals.fats.toFixed(1)}g
+                {displayTotals.fats.toFixed(1)}g
               </Text>
             </View>
           </View>
@@ -285,19 +415,55 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 16,
   },
-  calorieCircleContainer: {
+  donutChartContainer: {
     width: "40%",
     alignItems: "center",
   },
-  calorieCircle: {
+  donutChart: {
     width: 120,
     height: 120,
     borderRadius: 60,
-    borderWidth: 8,
-    borderColor: "#0066cc",
-    borderLeftColor: "#ffb700",
+    position: "relative",
     justifyContent: "center",
     alignItems: "center",
+  },
+  donutBackground: {
+    position: "absolute",
+    width: "100%",
+    height: "100%",
+    borderRadius: 60,
+    borderWidth: 12,
+    borderColor: "#f0f0f0",
+    overflow: "visible",
+  },
+  donutSegment: {
+    position: "absolute",
+    width: "100%",
+    height: "100%",
+    borderRadius: 60,
+    borderWidth: 12,
+    borderColor: "transparent",
+    transformOrigin: "center",
+  },
+  proteinSegment: {
+    borderTopColor: "#0066cc",
+    borderRightColor: "#0066cc",
+  },
+  carbsSegment: {
+    borderRightColor: "#ff6b00",
+    borderBottomColor: "#ff6b00",
+  },
+  fatSegment: {
+    borderBottomColor: "#ffb700",
+    borderLeftColor: "#ffb700",
+  },
+  donutCenter: {
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#fff",
+    width: 80,
+    height: 80,
+    borderRadius: 40,
   },
   calorieNumber: {
     fontSize: 28,
@@ -326,6 +492,21 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "500",
     color: "#000",
+  },
+  macroIndicator: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    marginRight: 8,
+  },
+  proteinIndicator: {
+    backgroundColor: "#0066cc",
+  },
+  carbsIndicator: {
+    backgroundColor: "#ff6b00",
+  },
+  fatIndicator: {
+    backgroundColor: "#ffb700",
   },
   progressIndicator: {
     flexDirection: "row",
@@ -454,6 +635,18 @@ const styles = StyleSheet.create({
     color: "#000",
     marginTop: 8,
     textAlign: "center",
+  },
+  donutCenterAbsoluteSmall: {
+    position: "absolute",
+    top: "40%",
+    left: "28%",
+    width: 100,
+    height: 100,
+    marginLeft: -35,
+    marginTop: -35,
+    alignItems: "center",
+    justifyContent: "center",
+    overflow: "visible",
   },
 });
 

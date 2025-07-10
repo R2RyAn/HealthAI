@@ -41,12 +41,15 @@ export const nutritionApi = {
     try {
       const token = await authService.getToken();
 
-      const response = await fetch("http://10.0.0.169:8080/api/nutrition/me", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          Accept: "application/json",
-        },
-      });
+      const response = await fetch(
+        "http://10.0.0.169:8080/api/nutrition/me/today",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            Accept: "application/json",
+          },
+        }
+      );
 
       if (!response.ok) {
         throw new Error("Failed to fetch nutrition data getDailyNutrition");

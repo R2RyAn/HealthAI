@@ -10,27 +10,17 @@ import org.springframework.web.client.RestTemplate;
 @Service
 public class OFFAPIService {
 
-    public OFFAPI getProductByBarcode(String barcode) {
+    public OFFAPI.Product getProductByBarcode(String barcode) {
         RestTemplate restTemplate = new RestTemplate();
-
         String url = "https://world.openfoodfacts.org/api/v0/product/" + barcode + ".json";
 
-        OFFAPIResponse response = restTemplate.getForObject(url, OFFAPIResponse.class);
+        OFFAPI fullResponse = restTemplate.getForObject(url, OFFAPI.class);
 
-        OFFAPI product = new OFFAPI();
-        if (response != null && response.getProduct() != null) {
-            product.setName(response.getProduct().getProductName());
-            Double energyKcal = response.getProduct().getNutriments().getEnergyKcal();
-            if (energyKcal != null) {
-                product.setCalories(energyKcal);
-            } else {
-                product.setCalories(0.0); // or null if you use Double
-            }
-            product.setProteins(response.getProduct().getNutriments().getProteins());
-            product.setFats(response.getProduct().getNutriments().getFat());
-            product.setCarbs(response.getProduct().getNutriments().getCarbohydrates());
-
+        if (fullResponse != null && fullResponse.getProduct() != null) {
+            return fullResponse.getProduct(); // returns only the useful part
+        } else {
+            return null;
         }
-        return product;
     }
 }
+

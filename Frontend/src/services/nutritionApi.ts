@@ -23,7 +23,7 @@ export interface NewNutritionEntry {
   protein: number;
   carbs: number;
   fat: number;
-  mealType: "Breakfast" | "Lunch" | "Dinner" | "Snack";
+  mealType: "Breakfast" | "Lunch" | "Dinner" | "Snack" | "Other";
   notes: string;
 }
 

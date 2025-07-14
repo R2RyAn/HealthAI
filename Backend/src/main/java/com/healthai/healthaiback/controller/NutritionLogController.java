@@ -31,6 +31,7 @@ public class NutritionLogController {
     @PostMapping("/log")
     public NutritionLog addLog(@AuthenticationPrincipal Person person, @RequestBody NutritionLog log) {
         log.setPerson(person);
+        System.out.println("Food logged");
         return nutritionLogService.save(log);
     }
 

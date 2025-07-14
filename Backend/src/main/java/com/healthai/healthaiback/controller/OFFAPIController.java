@@ -17,7 +17,8 @@ public class OFFAPIController {
 
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/{barcode}")
-    public OFFAPI getProduct(@PathVariable String barcode) {
+    public OFFAPI.Product getProduct(@PathVariable String barcode) {
         return offapiService.getProductByBarcode(barcode);
     }
 }
+

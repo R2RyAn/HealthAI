@@ -16,6 +16,7 @@ import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import { useNavigation } from "@react-navigation/native";
 import { fetchProductByBarcode } from "../services/productApi";
 import { useNutrition } from "../contexts/NutritionContext";
+import { nutritionApi, NewNutritionEntry } from "../services/nutritionApi";
 
 export default function Scanner() {
   const navigation = useNavigation();
@@ -42,17 +43,24 @@ export default function Scanner() {
         // Fetch product data from API
         const productData = await fetchProductByBarcode(result.data);
 
+        // Convert to the format expected by nutrition context
+        const nutritionEntry: NewNutritionEntry = {
+          entryDate: new Date().toISOString(),
+          calories: productData.nutriments["energy-kcal"],
+          protein: productData.nutriments.proteins,
+          carbs: productData.nutriments.carbohydrates,
+          fat: productData.nutriments.fat,
+          mealType: "Lunch" as const,
+          notes: "",
+        };
+
         // Add product to nutrition totals
-        addProduct(productData);
+        await nutritionApi.addNutritionEntry(nutritionEntry);
 
         // Show success message
         Alert.alert(
           "Product Added!",
-          `${productData.name || "Product"}\nCalories: ${
-            productData.calories
-          } kcal\nProtein: ${productData.proteins}g\nCarbs: ${
-            productData.carbs
-          }g\nFat: ${productData.fats}g`,
+          `${productData.product_name}\nCalories: ${productData.nutriments["energy-kcal"]} kcal\nProtein: ${productData.nutriments.proteins}g\nCarbs: ${productData.nutriments.carbohydrates}g\nFat: ${productData.nutriments.fat}g`,
           [{ text: "OK" }]
         );
       } catch (error) {

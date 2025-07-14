@@ -1,50 +1,39 @@
 package com.healthai.healthaiback.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Data;
+
+@Data
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class OFFAPI {
 
-    private String name;
-    private Double calories;
-    private Double proteins;
-    private Double fats;
-    private Double carbs;
+    @JsonProperty("product")
+    private Product product;
 
-    public Double getCarbs() {
-        return carbs;
+    @Data
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class Product {
+        @JsonProperty("product_name")
+        private String name;
+
+        @JsonProperty("nutriments")
+        private Nutriments nutriments;
     }
 
-    public void setCarbs(double carbs) {
-        this.carbs = carbs;
-    }
+    @Data
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class Nutriments {
+        @JsonProperty("energy-kcal")
+        private Double calories;
 
-    public Double getFats() {
-        return fats;
-    }
+        @JsonProperty("proteins")
+        private Double proteins;
 
-    public void setFats(double fats) {
-        this.fats = fats;
-    }
+        @JsonProperty("fat")
+        private Double fats;
 
-    public Double getProteins() {
-        return proteins;
-    }
-
-    public void setProteins(double proteins) {
-        this.proteins = proteins;
-    }
-
-    public Double getCalories() {
-        return calories;
-    }
-
-    public void setCalories(double calories) {
-        this.calories = calories;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
+        @JsonProperty("carbohydrates")
+        private Double carbs;
     }
 }

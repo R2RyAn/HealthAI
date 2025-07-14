@@ -2,11 +2,13 @@ import { Alert } from "react-native";
 import { authService } from "../services/auth";
 
 export interface ProductData {
-  name: string | null;
-  calories: number;
-  proteins: number;
-  fats: number;
-  carbs: number;
+  product_name: string;
+  nutriments: {
+    "energy-kcal": number;
+    proteins: number;
+    fat: number;
+    carbohydrates: number;
+  };
 }
 
 export const fetchProductByBarcode = async (
@@ -37,7 +39,7 @@ export const fetchProductByBarcode = async (
 
     const data = await response.json();
 
-    if (data.name === null) {
+    if (!data.product_name) {
       throw new Error("Product not found in database");
     }
 

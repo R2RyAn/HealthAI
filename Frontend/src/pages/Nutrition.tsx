@@ -145,6 +145,18 @@ const Nutrition = () => {
     });
   };
 
+  const handleDeleteMeal = async (mealId: string) => {
+    try {
+      await nutritionApi.deleteNutritionEntry(mealId);
+      // Reload the data to reflect the deletion
+      await loadNutritionData();
+      Alert.alert("Success", "Meal deleted successfully");
+    } catch (error) {
+      console.error("Delete meal error:", error);
+      Alert.alert("Error", "Failed to delete meal");
+    }
+  };
+
   const getMealIcon = (mealType: string) => {
     switch (mealType) {
       case "Breakfast":
@@ -284,9 +296,17 @@ const Nutrition = () => {
                   />
                   <Text style={styles.mealType}>{meal.mealType}</Text>
                 </View>
-                <Text style={styles.mealTime}>
-                  {formatTime(meal.entryDate)}
-                </Text>
+                <View style={styles.mealHeaderRight}>
+                  <Text style={styles.mealTime}>
+                    {formatTime(meal.entryDate)}
+                  </Text>
+                  <TouchableOpacity
+                    style={styles.deleteButton}
+                    onPress={() => handleDeleteMeal(meal.id)}
+                  >
+                    <Icon name="close" size={18} color="#ff4444" />
+                  </TouchableOpacity>
+                </View>
               </View>
 
               {/* Meal Name */}
@@ -510,6 +530,16 @@ const styles = StyleSheet.create({
   mealTime: {
     fontSize: 14,
     color: "#666",
+  },
+  mealHeaderRight: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  deleteButton: {
+    padding: 4,
+    borderRadius: 12,
+    backgroundColor: "#fff5f5",
   },
   mealName: {
     fontSize: 16,

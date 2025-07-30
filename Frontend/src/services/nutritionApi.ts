@@ -126,6 +126,32 @@ export const nutritionApi = {
     }
   },
 
+  // Delete a nutrition entry
+  async deleteNutritionEntry(id: string): Promise<void> {
+    try {
+      const token = await authService.getToken();
+
+      const response = await fetch(
+        `http://10.0.0.169:8080/api/nutrition/log/${id}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to delete nutrition entry");
+      }
+
+      console.log("Nutrition entry deleted successfully:", id);
+    } catch (error) {
+      console.error("Nutrition API delete error:", error);
+      throw new Error("Failed to delete nutrition entry");
+    }
+  },
+
   // Get daily totals grouped by date
   async getDailyTotals(): Promise<Record<string, DailyTotals>> {
     try {

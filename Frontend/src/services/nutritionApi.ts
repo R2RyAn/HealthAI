@@ -61,10 +61,42 @@ export const nutritionApi = {
     }
   },
 
+  // Fetch user's nutrition log for a specific date
+  async getNutritionByDate(date: string): Promise<NutritionEntry[]> {
+    try {
+      const token = await authService.getToken();
+
+      const response = await fetch(
+        `http://10.0.0.169:8080/api/nutrition/me/today/${date}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            Accept: "application/json",
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch nutrition data for date");
+      }
+
+      const data = await response.json();
+      console.log(`Nutrition API response for ${date}:`, data);
+      return data;
+    } catch (error) {
+      console.error("Nutrition API error for date:", error);
+      throw new Error("Failed to fetch nutrition data for date");
+    }
+  },
+
   // Add a new nutrition entry
   async addNutritionEntry(entry: NewNutritionEntry): Promise<NutritionEntry> {
     try {
       const token = await authService.getToken();
+      console.log(
+        "Adding nutrition entry with token:",
+        token ? "Token exists" : "No token"
+      );
 
       const response = await fetch("http://10.0.0.169:8080/api/nutrition/log", {
         method: "POST",
@@ -75,12 +107,21 @@ export const nutritionApi = {
         body: JSON.stringify(entry),
       });
 
+      console.log("Nutrition API response status:", response.status);
+
       if (!response.ok) {
-        throw new Error("Failed to add nutrition entry addNutritionEntry");
+        const errorText = await response.text();
+        console.error("Nutrition API error response:", errorText);
+        throw new Error(
+          `Failed to add nutrition entry: ${response.status} - ${errorText}`
+        );
       }
 
-      return await response.json();
+      const result = await response.json();
+      console.log("Nutrition entry added successfully:", result);
+      return result;
     } catch (error) {
+      console.error("Nutrition API error:", error);
       throw new Error("Failed to add nutrition entry");
     }
   },

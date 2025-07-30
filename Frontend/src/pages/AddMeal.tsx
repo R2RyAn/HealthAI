@@ -11,12 +11,10 @@ import {
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
-import { useNutrition } from "../contexts/NutritionContext";
 import { nutritionApi, NewNutritionEntry } from "../services/nutritionApi";
 
 const AddMeal = () => {
   const navigation = useNavigation();
-  const { addProduct } = useNutrition();
 
   const [mealName, setMealName] = useState("");
   const [calories, setCalories] = useState("");
@@ -59,9 +57,13 @@ const AddMeal = () => {
     setIsSubmitting(true);
 
     try {
-      // Create nutrition entry for backend
+      // Create nutrition entry for backend with local date
+      const now = new Date();
+      const localDate = new Date(
+        now.getTime() - now.getTimezoneOffset() * 60000
+      );
       const nutritionEntry: NewNutritionEntry = {
-        entryDate: new Date().toISOString(),
+        entryDate: localDate.toISOString(),
         calories: caloriesNum,
         protein: proteinNum,
         carbs: carbsNum,
@@ -70,22 +72,11 @@ const AddMeal = () => {
         notes: notes.trim() || `${mealName.trim()} - ${mealType}`,
       };
 
+      console.log("Sending nutrition entry:", nutritionEntry);
+
       // Send to backend
-      await nutritionApi.addNutritionEntry(nutritionEntry);
-
-      // Also add to local nutrition context for immediate UI update
-      const localMeal = {
-        name: mealName.trim(),
-        calories: caloriesNum,
-        proteins: proteinNum,
-        carbs: carbsNum,
-        fats: fatNum,
-        brand: "Manual Entry",
-        barcode: "",
-        image: "",
-      };
-
-      addProduct(localMeal);
+      const result = await nutritionApi.addNutritionEntry(nutritionEntry);
+      console.log("Nutrition entry added successfully:", result);
 
       // Show success message
       Alert.alert("Success", "Meal added successfully!", [

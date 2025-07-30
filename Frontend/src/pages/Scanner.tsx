@@ -43,15 +43,19 @@ export default function Scanner() {
         // Fetch product data from API
         const productData = await fetchProductByBarcode(result.data);
 
-        // Convert to the format expected by nutrition context
+        // Convert to the format expected by nutrition context with local date
+        const now = new Date();
+        const localDate = new Date(
+          now.getTime() - now.getTimezoneOffset() * 60000
+        );
         const nutritionEntry: NewNutritionEntry = {
-          entryDate: new Date().toISOString(),
+          entryDate: localDate.toISOString(),
           calories: productData.nutriments["energy-kcal"],
           protein: productData.nutriments.proteins,
           carbs: productData.nutriments.carbohydrates,
           fat: productData.nutriments.fat,
           mealType: "Lunch" as const,
-          notes: "",
+          notes: productData.product_name,
         };
 
         // Add product to nutrition totals

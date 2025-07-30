@@ -8,7 +8,7 @@ import {
   Dimensions,
   Alert,
 } from "react-native";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import { useUserData } from "../hooks/useUserData";
 import { useNutrition } from "../contexts/NutritionContext";
@@ -27,10 +27,18 @@ const Index = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const today = new Date().toISOString().split("T")[0];
+    // Use local date instead of UTC to match your timezone
+    const today = new Date().toLocaleDateString("en-CA"); // Returns YYYY-MM-DD format
     setTodayKey(today);
     loadNutritionData();
   }, []);
+
+  // Reload data when screen comes into focus (e.g., after adding a meal)
+  useFocusEffect(
+    React.useCallback(() => {
+      loadNutritionData();
+    }, [])
+  );
 
   const loadNutritionData = async () => {
     try {

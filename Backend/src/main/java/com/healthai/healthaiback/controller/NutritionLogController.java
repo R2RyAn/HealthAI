@@ -12,6 +12,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -31,10 +32,11 @@ public class NutritionLogController {
     @PostMapping("/log")
     public NutritionLog addLog(@AuthenticationPrincipal Person person, @RequestBody NutritionLog log) {
         log.setPerson(person);
-        System.out.println("Food logged");
+        if (log.getEntryDate() == null) {
+            log.setEntryDate(LocalDateTime.now()); // ✅ auto-set
+        }
         return nutritionLogService.save(log);
     }
-
 
     @GetMapping("/log/{personId}")
     public List<NutritionLog> getLogs(@PathVariable("personId") UUID personId) {
@@ -46,24 +48,31 @@ public class NutritionLogController {
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/me")
     public ResponseEntity<List<NutritionLog>> getCurrentUserNutritionLog(@AuthenticationPrincipal Person person) {
-        return ResponseEntity.ok(getLogs(person.getId()));
+        return ResponseEntity.ok(nutritionLogService.getLogsByPerson(person));
     }
 
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/me/today")
     public ResponseEntity<List<NutritionLog>> getTodaysNutritionLog(@AuthenticationPrincipal Person person) {
         LocalDate today = LocalDate.now();
-        List<NutritionLog> todaysLogs = nutritionLogService.getLogsByPersonAndDateToday(person, today);
-        return ResponseEntity.ok(todaysLogs);
+        return ResponseEntity.ok(nutritionLogService.getLogsByPersonAndDate(person, today));
     }
 
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping("/me/today/{date}")
+    public ResponseEntity<List<NutritionLog>> getAnyDayNutritionLog(
+            @AuthenticationPrincipal Person person,
+            @PathVariable("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+
+        return ResponseEntity.ok(nutritionLogService.getLogsByPersonAndDate(person, date));
+    }
 
     @PreAuthorize("#personId == authentication.principal.id.toString() or hasRole('ADMIN')")
     @GetMapping("/log/{personId}/date")
     public List<NutritionLog> getLogsByDate(@PathVariable("personId") UUID personId,
                                             @RequestParam("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
         Optional<Person> personOpt = personRepository.findById(personId);
-        return personOpt.map(person -> nutritionLogService.getLogsByPersonAndDateToday(person, date))
+        return personOpt.map(person -> nutritionLogService.getLogsByPersonAndDate(person, date))
                 .orElseThrow(() -> new RuntimeException("Person not found"));
     }
 }

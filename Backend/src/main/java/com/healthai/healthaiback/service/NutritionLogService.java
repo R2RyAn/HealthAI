@@ -20,14 +20,11 @@ public class NutritionLogService {
         return nutritionLogRepository.save(log);
     }
 
-
     public List<NutritionLog> getLogsByPerson(Person person) {
         return nutritionLogRepository.findByPerson(person);
     }
 
-    public List<NutritionLog> getLogsByPersonAndDateToday(Person person, LocalDate date) {
-        LocalDateTime startOfDay = date.atStartOfDay();
-        LocalDateTime endOfDay = date.atTime(23, 59, 59);
-        return nutritionLogRepository.findByPersonAndEntryDateBetween(person, startOfDay, endOfDay);
+    public List<NutritionLog> getLogsByPersonAndDate(Person person, LocalDate date) {
+        return nutritionLogRepository.findByPersonAndEntryDateOnly(person, date);
     }
 }

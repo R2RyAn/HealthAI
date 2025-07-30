@@ -234,12 +234,27 @@ const BodyFatPredict = () => {
         <View style={styles.resultSection}>
           <Text style={styles.resultTitle}>Prediction Result</Text>
           <View style={styles.resultCard}>
-            <Icon name="chart-line" size={32} color="#0066cc" />
-            <Text style={styles.resultLabel}>Estimated Body Fat</Text>
-            <Text style={styles.resultValue}>{prediction.toFixed(2)}%</Text>
-            <Text style={styles.resultDescription}>
-              This is an AI-generated estimate based on your image
-            </Text>
+            {prediction === -1 ? (
+              <>
+                <Icon name="alert-circle" size={32} color="#ff4444" />
+                <Text style={styles.resultLabel}>No Body Detected</Text>
+                <Text style={styles.resultValue}>
+                  No body found in this picture
+                </Text>
+                <Text style={styles.resultDescription}>
+                  Please ensure a clear image of a person is visible
+                </Text>
+              </>
+            ) : (
+              <>
+                <Icon name="chart-line" size={32} color="#0066cc" />
+                <Text style={styles.resultLabel}>Estimated Body Fat</Text>
+                <Text style={styles.resultValue}>{prediction.toFixed(2)}%</Text>
+                <Text style={styles.resultDescription}>
+                  This is an AI-generated estimate based on your image
+                </Text>
+              </>
+            )}
           </View>
         </View>
       )}
@@ -456,4 +471,3 @@ const styles = StyleSheet.create({
 });
 
 export default BodyFatPredict;
- 

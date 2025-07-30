@@ -8,7 +8,7 @@ import {
   RefreshControl,
   Alert,
 } from "react-native";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import {
   nutritionApi,
@@ -21,23 +21,47 @@ const Nutrition = () => {
   const [dailyTotals, setDailyTotals] = useState<Record<string, DailyTotals>>(
     {}
   );
-  const [todayKey, setTodayKey] = useState("");
+  const [selectedDate, setSelectedDate] = useState(new Date());
   const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [sortBy, setSortBy] = useState<"time" | "mealType">("time");
 
   useEffect(() => {
-    const today = new Date().toISOString().split("T")[0];
-    setTodayKey(today);
     loadNutritionData();
-  }, []);
+  }, [selectedDate]);
+
+  // Reload data when screen comes into focus (e.g., after adding a meal)
+  useFocusEffect(
+    React.useCallback(() => {
+      loadNutritionData();
+    }, [])
+  );
 
   const loadNutritionData = async () => {
     try {
       setIsLoading(true);
-      const data = await nutritionApi.getDailyTotals();
-      setDailyTotals(data);
+      const dateKey = selectedDate.toLocaleDateString("en-CA");
+      const entries = await nutritionApi.getNutritionByDate(dateKey);
+
+      // Create a single day entry
+      const dailyTotal: DailyTotals = {
+        calories: entries.reduce((sum, entry) => sum + entry.calories, 0),
+        protein: entries.reduce((sum, entry) => sum + entry.protein, 0),
+        carbs: entries.reduce((sum, entry) => sum + entry.carbs, 0),
+        fat: entries.reduce((sum, entry) => sum + entry.fat, 0),
+        meals: entries,
+      };
+
+      setDailyTotals({ [dateKey]: dailyTotal });
     } catch (error) {
-      Alert.alert("Error", "Failed to load nutrition data");
+      console.error("Load nutrition data error:", error);
+      // If the specific date fails, try the general endpoint as fallback
+      try {
+        const data = await nutritionApi.getDailyTotals();
+        setDailyTotals(data);
+      } catch (fallbackError) {
+        Alert.alert("Error", "Failed to load nutrition data");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -49,7 +73,8 @@ const Nutrition = () => {
     setRefreshing(false);
   };
 
-  const todayData = dailyTotals[todayKey] || {
+  const selectedDateKey = selectedDate.toLocaleDateString("en-CA");
+  const todayData = dailyTotals[selectedDateKey] || {
     calories: 0,
     protein: 0,
     carbs: 0,
@@ -60,6 +85,64 @@ const Nutrition = () => {
   const formatTime = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  };
+
+  const formatDate = (date: Date) => {
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    if (date.toDateString() === today.toDateString()) {
+      return "Today";
+    } else if (date.toDateString() === yesterday.toDateString()) {
+      return "Yesterday";
+    } else if (date.toDateString() === tomorrow.toDateString()) {
+      return "Tomorrow";
+    } else {
+      return date.toLocaleDateString("en-US", {
+        weekday: "long",
+        month: "short",
+        day: "numeric",
+      });
+    }
+  };
+
+  const goToPreviousDay = () => {
+    const newDate = new Date(selectedDate);
+    newDate.setDate(newDate.getDate() - 1);
+    setSelectedDate(newDate);
+  };
+
+  const goToNextDay = () => {
+    const newDate = new Date(selectedDate);
+    newDate.setDate(newDate.getDate() + 1);
+    setSelectedDate(newDate);
+  };
+
+  const goToToday = () => {
+    setSelectedDate(new Date());
+  };
+
+  const toggleSort = () => {
+    setSortBy(sortBy === "time" ? "mealType" : "time");
+  };
+
+  const getSortedMeals = () => {
+    if (!todayData.meals || todayData.meals.length === 0) return [];
+
+    return [...todayData.meals].sort((a, b) => {
+      if (sortBy === "time") {
+        return (
+          new Date(a.entryDate).getTime() - new Date(b.entryDate).getTime()
+        );
+      } else {
+        // Sort by meal type: Breakfast, Lunch, Dinner, Snack
+        const mealTypeOrder = { Breakfast: 0, Lunch: 1, Dinner: 2, Snack: 3 };
+        return mealTypeOrder[a.mealType] - mealTypeOrder[b.mealType];
+      }
+    });
   };
 
   const getMealIcon = (mealType: string) => {
@@ -106,9 +189,33 @@ const Nutrition = () => {
         </TouchableOpacity>
       </View>
 
+      {/* Date Navigation */}
+      <View style={styles.dateNavigation}>
+        <TouchableOpacity style={styles.dateArrow} onPress={goToPreviousDay}>
+          <Icon name="chevron-left" size={24} color="#0066cc" />
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.dateDisplay} onPress={goToToday}>
+          <Text style={styles.dateText}>{formatDate(selectedDate)}</Text>
+          <Text style={styles.dateSubtext}>
+            {selectedDate.toLocaleDateString("en-US", {
+              month: "long",
+              day: "numeric",
+              year: "numeric",
+            })}
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.dateArrow} onPress={goToNextDay}>
+          <Icon name="chevron-right" size={24} color="#0066cc" />
+        </TouchableOpacity>
+      </View>
+
       {/* Daily Totals Card */}
       <View style={styles.totalsCard}>
-        <Text style={styles.totalsTitle}>Today's Totals</Text>
+        <Text style={styles.totalsTitle}>
+          {formatDate(selectedDate)}'s Totals
+        </Text>
         <View style={styles.totalsGrid}>
           <View style={styles.totalItem}>
             <Icon name="fire" size={24} color="#ff6b00" />
@@ -137,11 +244,27 @@ const Nutrition = () => {
 
       {/* Meals List */}
       <View style={styles.mealsSection}>
-        <Text style={styles.sectionTitle}>Today's Meals</Text>
+        <View style={styles.mealsHeader}>
+          <Text style={styles.sectionTitle}>
+            {formatDate(selectedDate)}'s Meals
+          </Text>
+          <TouchableOpacity style={styles.sortButton} onPress={toggleSort}>
+            <Icon
+              name={sortBy === "time" ? "clock-outline" : "food-variant"}
+              size={20}
+              color="#0066cc"
+            />
+            <Text style={styles.sortButtonText}>
+              Sort by {sortBy === "time" ? "Time" : "Type"}
+            </Text>
+          </TouchableOpacity>
+        </View>
         {todayData.meals.length === 0 ? (
           <View style={styles.emptyState}>
             <Icon name="food-off" size={48} color="#ccc" />
-            <Text style={styles.emptyText}>No meals logged today</Text>
+            <Text style={styles.emptyText}>
+              No meals logged on {formatDate(selectedDate)}
+            </Text>
             <TouchableOpacity
               style={styles.addFirstMealButton}
               onPress={() => navigation.navigate("AddMeal" as never)}
@@ -150,7 +273,7 @@ const Nutrition = () => {
             </TouchableOpacity>
           </View>
         ) : (
-          todayData.meals.map((meal: NutritionEntry) => (
+          getSortedMeals().map((meal: NutritionEntry) => (
             <View key={meal.id} style={styles.mealCard}>
               <View style={styles.mealHeader}>
                 <View style={styles.mealTypeContainer}>
@@ -165,6 +288,9 @@ const Nutrition = () => {
                   {formatTime(meal.entryDate)}
                 </Text>
               </View>
+
+              {/* Meal Name */}
+              {meal.notes && <Text style={styles.mealName}>{meal.notes}</Text>}
 
               <View style={styles.mealNutrition}>
                 <View style={styles.mealNutritionItem}>
@@ -184,8 +310,6 @@ const Nutrition = () => {
                   <Text style={styles.mealNutritionValue}>{meal.fat}g</Text>
                 </View>
               </View>
-
-              {meal.notes && <Text style={styles.mealNotes}>{meal.notes}</Text>}
             </View>
           ))
         )}
@@ -236,6 +360,40 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
     elevation: 2,
   },
+  dateNavigation: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    padding: 16,
+    marginBottom: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  dateArrow: {
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: "#f8f9fa",
+  },
+  dateDisplay: {
+    alignItems: "center",
+    flex: 1,
+    paddingHorizontal: 16,
+  },
+  dateText: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#000",
+  },
+  dateSubtext: {
+    fontSize: 14,
+    color: "#666",
+    marginTop: 2,
+  },
   totalsCard: {
     backgroundColor: "#fff",
     borderRadius: 12,
@@ -280,6 +438,26 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#000",
     marginBottom: 12,
+  },
+  mealsHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  sortButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#f8f9fa",
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  sortButtonText: {
+    fontSize: 14,
+    fontWeight: "500",
+    color: "#0066cc",
+    marginLeft: 6,
   },
   emptyState: {
     alignItems: "center",
@@ -332,6 +510,13 @@ const styles = StyleSheet.create({
   mealTime: {
     fontSize: 14,
     color: "#666",
+  },
+  mealName: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#000",
+    marginBottom: 12,
+    marginTop: 4,
   },
   mealNutrition: {
     flexDirection: "row",

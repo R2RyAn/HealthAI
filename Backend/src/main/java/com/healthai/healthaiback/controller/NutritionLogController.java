@@ -75,4 +75,15 @@ public class NutritionLogController {
         return personOpt.map(person -> nutritionLogService.getLogsByPersonAndDate(person, date))
                 .orElseThrow(() -> new RuntimeException("Person not found"));
     }
+
+    @PreAuthorize("isAuthenticated()")
+    @DeleteMapping("/log/{id}")
+    public ResponseEntity<String> deleteLog(
+            @AuthenticationPrincipal Person person,
+            @PathVariable UUID id) {
+        nutritionLogService.deleteLogById(id, person);
+        System.out.println("Meal Deleted");
+        return ResponseEntity.ok("Nutrition log deleted successfully");
+    }
+
 }

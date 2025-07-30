@@ -9,8 +9,9 @@ import org.springframework.data.repository.query.Param;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
-public interface NutritionLogRepository extends JpaRepository<NutritionLog, Long> {
+public interface NutritionLogRepository extends JpaRepository<NutritionLog, UUID> {
     List<NutritionLog> findByPerson(Person person);
 
     List<NutritionLog> findByPersonAndEntryDateBetween(Person person, LocalDateTime startOfDay, LocalDateTime endOfDay);
